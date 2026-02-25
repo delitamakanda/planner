@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# Virtual Environment
+planner_venv/
+
+# IDE
+.idea/
+
+# Environment variables
+.env
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# PyInstaller
+*.spec
+
+# PyTest
+.pytest_cache/
+
+# PyCache
+*.pyc
+
+# Pylint
+.pylint.cache/
+
+# Pylint reports
+pylint_report.txt
+
