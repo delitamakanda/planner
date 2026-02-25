@@ -1,5 +1,7 @@
 # Planner
 
+[![Django CI](https://github.com/delitamakanda/planner/actions/workflows/django.yml/badge.svg?branch=main&event=push)](https://github.com/delitamakanda/planner/actions/workflows/django.yml)
+
 Application **Django** (Python) pour gérer un planning avec plusieurs modules (comptes, projets, congés, etc.).  
 Le dépôt contient un projet Django principal et plusieurs apps dédiées.
 
