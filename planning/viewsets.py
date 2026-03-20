@@ -1,6 +1,7 @@
 from rest_framework import  viewsets
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.throttling import ScopedRateThrottle
 
 from planning.models import Assignment
 from planning.serializers import AssignmentSerializer
@@ -14,6 +15,7 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = AssignmentFilter
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
     
     def get_queryset(self):
         qs = (
@@ -33,3 +35,8 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     
     def perform_update(self, serializer):
         return PlanningService.update_assignment(assignment=serializer.instance, data=serializer.validated_data)
+    
+    def get_throttles(self):
+        if self.action in ['create', 'update', 'partial_update', "destroy"]:
+            self.throttle_scope = 'planning_actions'
+        return super().get_throttles()
