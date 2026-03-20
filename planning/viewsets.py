@@ -38,5 +38,5 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     
     def get_throttles(self):
         if self.action in ['create', 'update', 'partial_update', "destroy"]:
-            self.throttle_scope = 'planning_actions'
+            self.throttle_scope = 'planning_write'
         return super().get_throttles()
