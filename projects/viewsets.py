@@ -32,7 +32,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         team_ids = manages_team_ids(u)
         if team_ids:
             return qs.filter(teams__id__in=team_ids).distinct()
-        return qs.filter(teams_memberships__user=u).distinct()
+        return qs.filter(teams__manager=u).distinct()
     
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -51,7 +51,7 @@ class ProjectTaskViewSet(viewsets.ModelViewSet):
         team_ids = manages_team_ids(u)
         if team_ids:
             return qs.filter(project__teams__id__in=team_ids).distinct()
-        return qs.filter(project__teams_memberships__user=u).distinct()
+        return qs.filter(project__manager=u).distinct()
     
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:

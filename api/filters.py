@@ -12,7 +12,7 @@ class AssignmentFilter(django_filters.FilterSet):
     
     class Meta:
         model = Assignment
-        fields = ['project', 'team', 'user', 'from_date', 'to_date']
+        fields = ['project_id', 'user_id', 'team', 'from_date', 'to_date', 'user']
     
     def filter_team(self, queryset, name, value):
         return queryset.filter(user__team_memberships__team_id=value)

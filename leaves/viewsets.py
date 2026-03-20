@@ -51,7 +51,7 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticatedAndReadOnly()]
+            return [IsAuthenticatedAndReadOnly]
         return super().get_permissions()
     
     @action(detail=True, methods=['POST'])
@@ -97,7 +97,7 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         lr: LeaveRequest = self.get_object()
         u = request.user
         
-        if not is_admin(u) and not is_hr(u) and not manages_team_ids(u):
+        if not is_admin(u) or not is_hr(u) or manages_team_ids(u):
             return Response({"detail": "Forbidden"}, status=403)
         
         if lr.status != LeaveRequest.Status.SUBMITTED:
