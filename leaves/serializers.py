@@ -13,7 +13,7 @@ class LeaveBalanceSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = LeaveBalance
-        fields = ['id', 'user', 'leave_type', 'acquired', 'used', 'remaining', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'leave_type', 'acquired', 'used', 'remaining', 'updated_at']
         read_only_fields = ['id', 'updated_at', 'remaining']
         
     def get_remaining(self, obj):
@@ -39,4 +39,4 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
             'decided_at',
             'created_at',
         ]
-        read_only_fields = ['id', 'manager_approver', 'hr_approver ','submitted_at', 'decided_at', 'created_at']
+        read_only_fields = ['id', 'manager_approver', 'hr_approver', 'submitted_at', 'decided_at', 'created_at']
