@@ -21,13 +21,13 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
     
 class ProjectSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
-    owner_id = serializers.PrimaryKeyRelatedField(source='owner', write_only=True, required=False, allow_null=True, queryset=None)
+    owner_id = serializers.PrimaryKeyRelatedField(source='owner', write_only=True, required=False, allow_null=True,)
     
     client = ClientSerializer(read_only=True)
-    client_id = serializers.PrimaryKeyRelatedField(source='client', write_only=True, required=False, allow_null=True, queryset=None)
+    client_id = serializers.PrimaryKeyRelatedField(source='client', write_only=True, required=False, allow_null=True,)
     
     teams = TeamSerializer(many=True, read_only=True)
-    team_ids = serializers.PrimaryKeyRelatedField(source='teams', write_only=True, required=False, allow_null=True, queryset=None)
+    team_ids = serializers.PrimaryKeyRelatedField(source='teams', write_only=True, required=False, allow_null=True,)
     
     class Meta:
         model = Project
