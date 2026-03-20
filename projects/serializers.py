@@ -1,4 +1,6 @@
 from rest_framework import  serializers
+
+from accounts.models import User, Team
 from projects.models import Project, Client, ProjectTask
 from accounts.serializers import UserSerializer, TeamSerializer
 
@@ -21,13 +23,13 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
     
 class ProjectSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
-    owner_id = serializers.PrimaryKeyRelatedField(source='owner', write_only=True, required=False, allow_null=True,)
+    owner_id = serializers.PrimaryKeyRelatedField(source='owner', write_only=True, required=False, allow_null=True,queryset=User.objects.all())
     
     client = ClientSerializer(read_only=True)
-    client_id = serializers.PrimaryKeyRelatedField(source='client', write_only=True, required=False, allow_null=True,)
+    client_id = serializers.PrimaryKeyRelatedField(source='client', write_only=True, required=False, allow_null=True,queryset=Client.objects.all())
     
     teams = TeamSerializer(many=True, read_only=True)
-    team_ids = serializers.PrimaryKeyRelatedField(source='teams', write_only=True, required=False, allow_null=True,)
+    team_ids = serializers.PrimaryKeyRelatedField(source='teams', write_only=True, required=False, allow_null=True,queryset=Team.objects.all())
     
     class Meta:
         model = Project
