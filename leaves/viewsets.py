@@ -1,5 +1,4 @@
 from __future__ import annotations
-from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -10,9 +9,10 @@ from leaves.models import LeaveType, LeaveBalance, LeaveRequest
 from leaves.serializers import LeaveTypeSerializer, LeaveBalanceSerializer, LeaveRequestSerializer
 from api.filters import LeaveRequestFilter
 from leaves.services import LeaveService
-from leaves.permissions import LeaveRequestPermission, is_hr, is_admin, manages_team_ids
+from leaves.permissions import is_hr, is_admin
 from api.querysets import scope_to_user_teams
-from accounts.permissions import IsAdminOrHr, IsAuthenticatedAndReadOnly, is_admin, is_hr, manages_team_ids
+from accounts.permissions import IsAdminOrHr, is_admin, is_hr
+from rest_framework.throttling import ScopedRateThrottle
 
 
 class LeaveTypeViewSet(viewsets.ModelViewSet):
@@ -35,6 +35,7 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated,]
     filter_backends = [DjangoFilterBackend,]
     filterset_class = LeaveRequestFilter
+    throttle_classes = [ScopedRateThrottle]
     
     def get_queryset(self):
         qs = (
@@ -98,3 +99,8 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         except ValueError as e:
             return Response({"detail": str(e)}, status=400)
         return Response(self.get_serializer(lr).data)
+    
+    def get_throttles(self):
+        if self.action in ['submit', 'approve','reject', 'cancel']:
+            self.throttle_scope = 'leave_actions'
+        return super().get_throttles()
