@@ -23,4 +23,8 @@ urlpatterns = [
     path('api/v1/auth/', include('api.auth_urls')),
     path('api/v1/', include('api.urls_health')),
     path('api/v1/', include('api.schema_urls')),
+    path('api/v1/accounts/', include('accounts.urls')),
+    path('api/v1/projects/', include('projects.urls')),
+    path('api/v1/planning/', include('planning.urls')),
+    path('api/v1/leaves/', include('leaves.urls')),
 ]
