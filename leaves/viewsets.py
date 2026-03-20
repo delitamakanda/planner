@@ -1,3 +1,4 @@
+from __future__ import annotations
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +9,8 @@ from rest_framework.response import Response
 from leaves.models import LeaveType, LeaveBalance, LeaveRequest
 from leaves.serializers import LeaveTypeSerializer, LeaveBalanceSerializer, LeaveRequestSerializer
 from api.filters import LeaveRequestFilter
+from leaves.services import LeaveService
+from leaves.permissions import LeaveRequestPermission, is_hr, is_admin, manages_team_ids
 from api.querysets import scope_to_user_teams
 from accounts.permissions import IsAdminOrHr, IsAuthenticatedAndReadOnly, is_admin, is_hr, manages_team_ids
 
@@ -24,13 +27,7 @@ class LeaveBalanceViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         qs = LeaveBalance.objects.select_related('user', 'leave_type').all()
-        u = self.request.user
-        if is_admin(u) or is_hr(u):
-            return qs
-        team_ids = manages_team_ids(u)
-        if team_ids:
-            return qs.filter(user__team_memberships__team_id__in=team_ids).distinct()
-        return qs.filter(user=u.id)
+        return scope_to_user_teams(qs, self.request.user, user_field="user")
     
     
 class LeaveRequestViewSet(viewsets.ModelViewSet):
@@ -48,66 +45,56 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-        
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticatedAndReadOnly]
-        return super().get_permissions()
+
     
     @action(detail=True, methods=['POST'])
     def submit(self, request, pk=None):
         lr: LeaveRequest = self.get_object()
-        if lr.user.id != request.user.id and not is_admin(request.user) and not is_hr(request.user):
+        try:
+            lr = LeaveService.submit(lr=lr, user=request.user)
+        except PermissionError:
             return Response({"detail": "Forbidden"}, status=403)
-        
-        if lr.status != LeaveRequest.Status.PENDING:
-            return Response({"detail": "Invalid status"}, status=400)
-        
-        lr.status = LeaveRequest.Status.SUBMITTED
-        lr.submitted_at = timezone.now()
-        lr.save(update_fields=['status','submitted_at'])
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
         return Response(self.get_serializer(lr).data)
     
     @action(detail=True, methods=['POST'])
     def approve(self, request, pk=None):
         lr: LeaveRequest = self.get_object()
-        u = request.user
         
-        if not is_admin(u) and not is_hr(u):
-            team_ids = manages_team_ids(u)
-            if not team_ids:
-                return Response({"detail": "Forbidden"}, status=403)
-            if not lr.user.team_memberships.filter(team_id__in=team_ids).exists():
-                return Response({"detail": "Forbidden"}, status=403)
-
-        if lr.status != LeaveRequest.Status.SUBMITTED:
-            return Response({"detail": "Invalid status"}, status=400)
-        lr.status = LeaveRequest.Status.APPROVED
-        lr.decided_at = timezone.now()
+        approved_as = "HR" if is_hr(request.user) else "manager"
         
-        if is_hr(u):
-            lr.hr_approver = u
-        else:
-            lr.manager_approver = u
-        lr.save(update_fields=['status', 'decided_at', 'hr_approver','manager_approver'])
+        if is_admin(request.user):
+            approved_as = "manager"
+            
+        try:
+            lr = LeaveService.approve(lr=lr, user=request.user, approved_as=approved_as)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
         return Response(self.get_serializer(lr).data)
     
     @action(detail=True, methods=['POST'])
     def reject(self, request, pk=None):
         lr: LeaveRequest = self.get_object()
-        u = request.user
         
-        if not is_admin(u) or not is_hr(u) or manages_team_ids(u):
+        rejected_as = "HR" if is_hr(request.user) else "manager"
+        if is_admin(request.user):
+            rejected_as = "manager"
+        
+        try:
+            lr = LeaveService.reject(lr=lr, user=request.user, rejected_as=rejected_as)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        
+        return Response(self.get_serializer(lr).data)
+    
+    @action(detail=True, methods=['POST'])
+    def cancel(self, request, pk=None):
+        lr: LeaveRequest = self.get_object()
+        try:
+            lr = LeaveService.cancel(lr=lr, user=request.user)
+        except PermissionError:
             return Response({"detail": "Forbidden"}, status=403)
-        
-        if lr.status != LeaveRequest.Status.SUBMITTED:
-            return Response({"detail": "Invalid status"}, status=400)
-        
-        lr.status = LeaveRequest.Status.REJECTED
-        lr.decided_at = timezone.now()
-        if is_hr(u):
-            lr.hr_approver = u
-        else:
-            lr.manager_approver = u
-        lr.save(update_fields=['status', 'decided_at', 'hr_approver','manager_approver'])
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
         return Response(self.get_serializer(lr).data)
