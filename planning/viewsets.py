@@ -7,6 +7,7 @@ from planning.serializers import AssignmentSerializer
 from api.filters import AssignmentFilter
 from api.querysets import scope_to_user_teams
 from accounts.permissions import IsAdminOrHr
+from planning.services import PlanningService
 
 class AssignmentViewSet(viewsets.ModelViewSet):
     serializer_class = AssignmentSerializer
@@ -23,9 +24,12 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         return scope_to_user_teams(qs, self.request.user, user_field="user")
     
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        return PlanningService.create_assignment(data=serializer.validated_data, user=self.request.user)
         
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminOrHr()]
         return super().get_permissions()
+    
+    def perform_update(self, serializer):
+        return PlanningService.update_assignment(assignment=serializer.instance, data=serializer.validated_data)
