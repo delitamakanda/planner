@@ -1,6 +1,6 @@
 asgiref==3.11.1
 attrs==25.4.0
-Django==6.0.6
+Django==6.0.7
 django-cors-headers==4.9.0
 django-stubs==5.2.9
 django-stubs-ext==5.2.9
@@ -17,7 +17,7 @@ python-decouple==3.8
 PyYAML==6.0.3
 referencing==0.37.0
 rpds-py==0.30.0
-sqlparse==0.5.5
+sqlparse==0.6.0
 types-PyYAML==6.0.12.20250915
 typing_extensions==4.15.0
 uritemplate==4.2.0
